@@ -1,7 +1,7 @@
 ﻿open LibGit2Sharp
 
 let commitsSinceTag (tag : Tag) (repo : Repository) =
-    let filter = new CommitFilter (IncludeReachableFrom = tag)
+    let filter = new CommitFilter (ExcludeReachableFrom = tag, FirstParentOnly = true)
     repo.Commits.QueryBy(filter)
 
 let latestTag (repo : Repository) =
@@ -17,5 +17,6 @@ let main argv =
     let lastTag = latestTag repo
     let commitsSinceTag = commitsSinceTag lastTag repo |> Seq.cast<Commit>
     printfn "%i commits since tag %s" (Seq.length commitsSinceTag) lastTag.FriendlyName
+    // Print all the commits to the console. TODO: Make a nice output file so we don't have to pipe.
     Seq.iter (printf "%s\n") (commitsSinceTag |> Seq.map(fun c -> c.MessageShort))
-    0 // return an integer exit code
+    0
