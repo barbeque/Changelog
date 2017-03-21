@@ -40,5 +40,5 @@ let main argv =
         // Print all the commits to the console. TODO: Make a nice output file so we don't have to pipe.
         Seq.iter (printf "%s\n") (commitsSinceTag |> Seq.map(fun c -> c.MessageShort))
     with
-        | Failure msg -> printfn "Failed: %s" msg; Environment.Exit(1)    
+        | Failure msg -> printfn "Failed: %s" msg; Environment.Exit(1) // TODO: usage printer?
     0
