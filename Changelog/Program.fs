@@ -12,6 +12,7 @@ let commitsSinceTag (tag : Tag) (repo : Repository) =
     repo.Commits.QueryBy(filter)
 
 let latestTag (repo : Repository) =
+    // TODO: What if tags is empty? This should probably be an option type returned.
     repo.Tags |> Seq.cast<Tag> 
     |> Seq.maxBy(fun t -> 
         let commit : Commit = downcast t.Target
@@ -35,7 +36,7 @@ let main argv =
         let repo = new Repository(config.repoPath)
         let lastTag = latestTag repo
         let commitsSinceTag = commitsSinceTag lastTag repo |> Seq.cast<Commit>
-        printfn "%i commits since tag %s" (Seq.length commitsSinceTag) lastTag.FriendlyName
+        printfn "%i commits since tag %s" (Seq.length commitsSinceTag) lastTag.FriendlyName // TODO: hide this print behind a 'verbose' option.
         // Print all the commits to the console. TODO: Make a nice output file so we don't have to pipe.
         Seq.iter (printf "%s\n") (commitsSinceTag |> Seq.map(fun c -> c.MessageShort))
     with
