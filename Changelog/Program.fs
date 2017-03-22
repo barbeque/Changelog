@@ -29,6 +29,15 @@ let parseArgs argv =
         | true  -> maybeArgs
         | _     -> failwithf "The directory specified (%s) does not exist." maybeArgs.repoPath
 
+let formatCommit (commit : Commit) =
+    // TODO: Format each message in markdown bullet points
+    // TODO: Embed author name, date in the bullet point
+    // TODO: Somehow add a hyperlink from the bullet point to the commit (TBD?)
+    commit.MessageShort
+
+let pluralize num singularNoun =
+    if num = 1 then singularNoun else singularNoun + "s"
+
 [<EntryPoint>]
 let main argv = 
     try
@@ -36,9 +45,12 @@ let main argv =
         let repo = new Repository(config.repoPath)
         let lastTag = latestTag repo
         let commitsSinceTag = commitsSinceTag lastTag repo |> Seq.cast<Commit>
-        printfn "%i commits since tag %s" (Seq.length commitsSinceTag) lastTag.FriendlyName // TODO: hide this print behind a 'verbose' option.
+        let numCommits = (Seq.length commitsSinceTag)
+        printfn "%i %s since tag %s" numCommits (pluralize numCommits "commit") lastTag.FriendlyName // TODO: hide this print behind a 'verbose' option.
         // Print all the commits to the console. TODO: Make a nice output file so we don't have to pipe.
-        Seq.iter (printf "%s\n") (commitsSinceTag |> Seq.map(fun c -> c.MessageShort))
+        Seq.iter (printf "%s\n") (commitsSinceTag |> Seq.map(formatCommit))
     with
         | Failure msg -> printfn "Failed: %s" msg; Environment.Exit(1) // TODO: usage printer?
     0
+
+// TODO: Prepend to an existing CHANGELOG.md, or create a new one if it does not exist
