@@ -38,6 +38,13 @@ let formatCommit (commit : Commit) =
 let pluralize num singularNoun =
     if num = 1 then singularNoun else singularNoun + "s"
 
+let prependToFile filepath lines =
+    let existingLines = if File.Exists(filepath) then File.ReadAllLines(filepath) else [||]
+    let newline = [|""|]
+    let newLines = List.toArray lines
+    let allLines = Array.concat [newLines; newline; existingLines]
+    File.WriteAllLines(filepath, allLines)
+
 [<EntryPoint>]
 let main argv = 
     try
@@ -46,9 +53,11 @@ let main argv =
         let lastTag = latestTag repo
         let commitsSinceTag = commitsSinceTag lastTag repo |> Seq.cast<Commit>
         let numCommits = (Seq.length commitsSinceTag)
-        printfn "%i %s since tag %s" numCommits (pluralize numCommits "commit") lastTag.FriendlyName // TODO: hide this print behind a 'verbose' option.
-        // Print all the commits to the console. TODO: Make a nice output file so we don't have to pipe.
-        Seq.iter (printf "%s\n") (commitsSinceTag |> Seq.map(formatCommit))
+
+        // Generate the header string.
+        let header = sprintf "%i %s since tag %s" numCommits (pluralize numCommits "commit") lastTag.FriendlyName
+        // Print all the commits to the head of the file.
+        ignore (prependToFile "CHANGELOG.md" (header :: Seq.toList (commitsSinceTag |> Seq.map(formatCommit))))
     with
         | Failure msg -> printfn "Failed: %s" msg; Environment.Exit(1) // TODO: usage printer?
     0
